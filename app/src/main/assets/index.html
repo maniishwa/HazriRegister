@@ -34,13 +34,14 @@
   td.date .dow{display:block;font-size:10px;color:var(--dim);font-weight:600}
   tr.today td{background:#fff3c4}
   tr.today td.date{color:var(--amber)}
-  td.cell{cursor:pointer;min-width:74px;height:46px;vertical-align:middle;
+  td.cell{cursor:pointer;min-width:74px;min-height:46px;height:auto;padding:4px 2px;vertical-align:middle;
     transition:background .12s ease}
   td.cell:active{background:#fde68a}
   .mark{font-size:19px;font-weight:800}
   .mark.P{color:var(--green)} .mark.H{color:var(--amber)}
   .mark.h{color:var(--blue)} .mark.A{color:var(--red)}
   .paid{display:block;font-size:11px;color:var(--dim);font-weight:600}
+  .earn{display:block;font-size:12px;color:#166534;font-weight:700}
   .empty{color:#c9ced6;font-size:15px}
   .card{background:#fff;border:1px solid #e2ddc8;border-radius:10px;
     padding:12px 14px;margin-top:12px}
@@ -169,7 +170,17 @@ function seed(){
       {id:1, name:'Ashok', role:'मिस्त्री', wage:700},
       {id:2, name:'Ladka', role:'हेल्पर', wage:400}
     ],
-    marks:{}, payments:[]
+    marks:{
+      '2026-11-15':{1:'P'},
+      '2026-11-16':{1:'H'},
+      '2026-11-17':{1:'H'},
+      '2026-11-18':{1:'H',2:'H'}
+    },
+    payments:[
+      {id:1, workerId:1, date:'2026-11-15', amount:500},
+      {id:2, workerId:1, date:'2026-11-18', amount:3100},
+      {id:3, workerId:2, date:'2026-11-18', amount:200}
+    ]
   };
 }
 function load(){
@@ -230,7 +241,7 @@ function render(){
       var mk = (db.marks[key] || {})[wk2.id];
       var paid = paidOn(wk2.id, key);
       html += '<td class="cell' + (w2>0 ? ' wdiv' : '') + '" data-date="' + key + '" data-wid="' + wk2.id + '">';
-      if (mk){ var mo = markOf(mk); html += '<span class="mark ' + mk + '">' + mo.t + '</span>'; }
+      if (mk){ var mo = markOf(mk); html += '<span class="mark ' + mk + '">' + mo.t + '</span><span class="earn">' + rs(rateFor(wk2.wage, mk)) + '</span>'; }
       else { html += '<span class="empty">·</span>'; }
       if (paid>0) html += '<span class="paid">दिया ' + rs(paid) + '</span>';
       html += '</td>';
@@ -253,6 +264,7 @@ function render(){
 function renderSummary(){
   var box = document.getElementById('summary');
   var html = '';
+  var th=0, tk=0, td=0;
   for (var i=0; i<db.workers.length; i++){
     var wk = db.workers[i];
     var cnt = {P:0,H:0,h:0,A:0}, hazri = 0, kamai = 0;
@@ -264,6 +276,7 @@ function renderSummary(){
       }
     }
     var diya = paidInMonth(wk.id, viewY, viewM);
+    th += hazri; tk += kamai; td += diya;
     html += '<div class="card"><h3>' + esc(wk.name) + ' <span style="color:var(--dim);font-size:13px">(' + esc(wk.role) + ')</span></h3>'
       + '<p class="row">P: <b>' + cnt.P + '</b> · P½: <b>' + cnt.H + '</b> · ½: <b>' + cnt.h + '</b> · A: <b>' + cnt.A + '</b>'
       + ' · कुल <b>' + hazri + ' हाज़िरी</b></p>'
@@ -271,6 +284,11 @@ function renderSummary(){
       + ' · <span class="baki">बाकी: ' + rs(kamai - diya) + '</span></p>'
       + '<p class="note">P½ = 1.5 हाज़िरी (' + rs(wk.wage) + ' + ' + rs(halfOf(wk.wage)) + ' = ' + rs(wk.wage + halfOf(wk.wage)) + ') · ½ = ' + rs(halfOf(wk.wage)) + '</p>'
       + '</div>';
+  }
+  if (db.workers.length > 1){
+    html += '<div class="card"><h3>कुल हिसाब</h3>'
+      + '<p class="row">कुल <b>' + th + ' हाज़िरी</b> · कमाई: <b>' + rs(tk) + '</b> · दिया: <b>' + rs(td) + '</b>'
+      + ' · <span class="baki">बाकी: ' + rs(tk - td) + '</span></p></div>';
   }
   box.innerHTML = html;
 }
