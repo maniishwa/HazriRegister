@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>हाज़िरी रजिस्टर</title>
+<style>
+  :root{
+    --paper:#fffdf0; --line:#b9d2f2; --margin:#f2a0a0;
+    --ink:#1f2937; --dim:#6b7280;
+    --green:#15803d; --amber:#d97706; --blue:#2563eb; --red:#dc2626;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#e9e3cf;color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;}
+  .wrap{max-width:760px;margin:0 auto;padding:12px 10px 60px}
+  h1{font-size:22px;margin:6px 0 2px;text-align:center}
+  .sub{text-align:center;color:var(--dim);font-size:13px;margin:0 0 10px}
+  .monthbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:10px 0}
+  .monthbar .mname{font-size:19px;font-weight:800}
+  button{font-family:inherit;cursor:pointer}
+  .navbtn{border:1px solid #cbd5e1;background:#fff;border-radius:9px;
+    padding:9px 14px;font-size:15px;font-weight:700;min-height:44px}
+  .navbtn:active{transform:scale(.96)}
+  .sheet{background:var(--paper);border:1px solid #d8d2b8;border-radius:6px;
+    box-shadow:0 2px 10px rgba(0,0,0,.12);overflow-x:auto;
+    background-image:linear-gradient(90deg,transparent 0,transparent 34px,var(--margin) 35px,transparent 36px)}
+  table{border-collapse:collapse;width:100%;min-width:340px}
+  th,td{border-bottom:1px solid var(--line);padding:0;text-align:center}
+  thead th{background:#fdf6d8;font-size:14px;padding:8px 4px;border-bottom:2px solid var(--margin)}
+  thead th .wage{display:block;font-size:11px;color:var(--dim);font-weight:600}
+  td.date{font-weight:700;font-size:14px;padding:8px 2px;width:64px;color:#374151}
+  td.date .dow{display:block;font-size:10px;color:var(--dim);font-weight:600}
+  tr.today td{background:#fff3c4}
+  tr.today td.date{color:var(--amber)}
+  td.cell{cursor:pointer;min-width:74px;height:46px;vertical-align:middle;
+    transition:background .12s ease}
+  td.cell:active{background:#fde68a}
+  .mark{font-size:19px;font-weight:800}
+  .mark.P{color:var(--green)} .mark.H{color:var(--amber)}
+  .mark.h{color:var(--blue)} .mark.A{color:var(--red)}
+  .paid{display:block;font-size:11px;color:var(--dim);font-weight:600}
+  .empty{color:#c9ced6;font-size:15px}
+  .card{background:#fff;border:1px solid #e2ddc8;border-radius:10px;
+    padding:12px 14px;margin-top:12px}
+  .card h3{margin:0 0 4px;font-size:16px}
+  .card .row{font-size:14px;margin:2px 0}
+  .baki{font-weight:800}
+  .note{font-size:12.5px;color:var(--dim)}
+  .addbtn{width:100%;margin-top:14px;background:var(--green);color:#fff;border:0;
+    border-radius:10px;padding:13px;font-size:16px;font-weight:800;min-height:50px}
+  .addbtn:active{transform:scale(.98)}
+  label{display:block;font-size:13px;font-weight:700;margin:10px 0 4px}
+  input,select{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;
+    font-size:16px;font-family:inherit;min-height:46px;background:#fff}
+  .ok{background:#dcfce7;color:#166534;border:1px solid #86efac;border-radius:10px;
+    padding:10px 14px;margin-top:12px;font-weight:700;display:none}
+  .err{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;border-radius:10px;
+    padding:10px 14px;margin-top:12px;font-weight:700;display:none}
+  /* ---- दिन वाला editor (नीचे से खुलता है) ---- */
+  .sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;z-index:40}
+  .editor{position:fixed;left:0;right:0;bottom:0;z-index:41;background:#fff;
+    border-radius:16px 16px 0 0;padding:16px 16px 22px;display:none;
+    max-width:760px;margin:0 auto;box-shadow:0 -4px 24px rgba(0,0,0,.25);
+    animation:up .18s ease}
+  @keyframes up{from{transform:translateY(24px);opacity:.4}to{transform:none;opacity:1}}
+  .editor h3{margin:0 0 2px;font-size:17px}
+  .marks{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:12px 0 4px}
+  .marks button{border:2px solid #e5e7eb;background:#fff;border-radius:10px;
+    padding:10px 2px;font-size:17px;font-weight:800;min-height:52px}
+  .marks button small{display:block;font-size:10.5px;font-weight:600;color:var(--dim)}
+  .marks button.on-P{border-color:var(--green);color:var(--green);background:#f0fdf4}
+  .marks button.on-H{border-color:var(--amber);color:var(--amber);background:#fffbeb}
+  .marks button.on-h{border-color:var(--blue);color:var(--blue);background:#eff6ff}
+  .marks button.on-A{border-color:var(--red);color:var(--red);background:#fef2f2}
+  .payrow{display:flex;gap:8px;margin-top:8px}
+  .payrow input{flex:1}
+  .payrow button{background:var(--green);color:#fff;border:0;border-radius:8px;
+    padding:0 18px;font-weight:800;font-size:15px;min-height:46px}
+  .payitem{display:flex;justify-content:space-between;align-items:center;
+    font-size:14px;padding:6px 0;border-bottom:1px dashed #e5e7eb}
+  .payitem button{background:none;border:0;color:var(--red);font-size:16px;font-weight:800;min-height:36px;min-width:36px}
+  .closebtn{width:100%;margin-top:14px;background:#111827;color:#fff;border:0;
+    border-radius:10px;padding:12px;font-size:15px;font-weight:800;min-height:48px}
+  .delbtn{background:none;border:0;color:var(--red);font-size:13px;font-weight:700;min-height:36px;padding:4px 8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>हाज़िरी रजिस्टर</h1>
+  <p class="sub">खाने में tap करो — P (पूरी), P½ (1.5 हाज़िरी), ½ (आधी), A (ग़ैरहाज़िर)</p>
+
+  <div class="monthbar">
+    <button class="navbtn" id="prevM" type="button">‹ पिछला</button>
+    <div class="mname" id="mName"></div>
+    <button class="navbtn" id="nextM" type="button">अगला ›</button>
+  </div>
+
+  <div class="ok" id="okMsg"></div>
+  <div class="err" id="errMsg"></div>
+
+  <div class="sheet">
+    <table id="grid"></table>
+  </div>
+
+  <div id="summary"></div>
+
+  <button class="addbtn" id="toggleAdd" type="button">＋ नया कामगार जोड़ो</button>
+
+  <div class="card" id="addCard" style="display:none">
+    <h3>नया कामगार</h3>
+    <label for="fName">1. कामगार का नाम</label>
+    <input id="fName" type="text" placeholder="जैसे — रमेश" autocomplete="off">
+    <label for="fRole">2. काम क्या है</label>
+    <select id="fRole">
+      <option value="मिस्त्री">मिस्त्री</option>
+      <option value="हेल्पर">हेल्पर</option>
+      <option value="मज़दूर">मज़दूर</option>
+      <option value="अन्य">अन्य</option>
+    </select>
+    <label for="fWage">3. एक हाज़िरी के पैसे (₹)</label>
+    <input id="fWage" type="number" inputmode="numeric" placeholder="जैसे — 700">
+    <p class="note" id="wageHint"></p>
+    <button class="addbtn" id="btnAdd" type="button">जोड़ो</button>
+    <div id="workerList"></div>
+  </div>
+
+  <p class="note" style="text-align:center;margin-top:16px">
+    P½ मतलब 1.5 हाज़िरी — पूरी मज़दूरी + आधा ओवरटाइम। ½ मतलब आधी हाज़िरी — आधी मज़दूरी।<br>
+    सारा data इसी phone के browser में save रहता है।
+  </p>
+</div>
+
+<div class="sheet-bg" id="bg"></div>
+<div class="editor" id="editor">
+  <h3 id="edTitle"></h3>
+  <p class="note" id="edSub" style="margin:0"></p>
+  <div class="marks" id="edMarks"></div>
+  <label for="payAmt">इस दिन पैसा दिया? (₹ लिखो)</label>
+  <div class="payrow">
+    <input id="payAmt" type="number" inputmode="numeric" placeholder="₹ रकम">
+    <button id="btnPay" type="button">जोड़ो</button>
+  </div>
+  <div id="payList"></div>
+  <button class="closebtn" id="btnCloseEd" type="button">बंद करो</button>
+</div>
+
+<script>
+var KEY = 'hazri-register-v1';
+var MONTHS = ['जनवरी','फ़रवरी','मार्च','अप्रैल','मई','जून','जुलाई','अगस्त','सितंबर','अक्टूबर','नवंबर','दिसंबर'];
+var DOW = ['रवि','सोम','मंगल','बुध','गुरु','शुक्र','शनि'];
+var MARKS = [
+  {k:'P', t:'P',  s:'पूरी',     v:1},
+  {k:'H', t:'P½', s:'1.5 हाज़िरी', v:1.5},
+  {k:'h', t:'½',  s:'आधी',      v:0.5},
+  {k:'A', t:'A',  s:'ग़ैरहाज़िर',  v:0}
+];
+function markOf(k){ for (var i=0;i<MARKS.length;i++) if (MARKS[i].k===k) return MARKS[i]; return null; }
+function halfOf(w){ return Math.round(w/2); }
+function rateFor(w,k){ if(k==='P') return w; if(k==='H') return w+halfOf(w); if(k==='h') return halfOf(w); return 0; }
+function rs(n){ return '₹' + n.toLocaleString('en-IN'); }
+function pad(n){ return (n<10?'0':'')+n; }
+function dkey(y,m,d){ return y+'-'+pad(m+1)+'-'+pad(d); }
+
+function seed(){
+  return {
+    workers:[
+      {id:1, name:'Ashok', role:'मिस्त्री', wage:700},
+      {id:2, name:'Ladka', role:'हेल्पर', wage:400}
+    ],
+    marks:{}, payments:[]
+  };
+}
+function load(){
+  try{
+    var d = JSON.parse(localStorage.getItem(KEY));
+    if (d && d.workers && d.marks) return d;
+  }catch(e){}
+  return seed();
+}
+var db = load();
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(db)); }catch(e){} }
+
+var now = new Date();
+var viewY = now.getFullYear(), viewM = now.getMonth();
+var sel = null; // {date:'YYYY-MM-DD', workerId:1}
+
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function monthPayments(workerId, dateStr){
+  var out=[];
+  for (var i=0;i<db.payments.length;i++){
+    var p=db.payments[i];
+    if (p.workerId===workerId && (!dateStr || p.date===dateStr)) out.push(p);
+  }
+  return out;
+}
+function paidOn(workerId, dateStr){
+  var s=0, ps=monthPayments(workerId, dateStr);
+  for (var i=0;i<ps.length;i++) s+=ps[i].amount;
+  return s;
+}
+function paidInMonth(workerId, y, m){
+  var s=0, pre=y+'-'+pad(m+1)+'-';
+  for (var i=0;i<db.payments.length;i++){
+    var p=db.payments[i];
+    if (p.workerId===workerId && p.date.indexOf(pre)===0) s+=p.amount;
+  }
+  return s;
+}
+
+function render(){
+  document.getElementById('mName').textContent = MONTHS[viewM] + ' ' + viewY;
+  var days = new Date(viewY, viewM+1, 0).getDate();
+  var todayKey = dkey(now.getFullYear(), now.getMonth(), now.getDate());
+  var html = '<thead><tr><th style="width:64px">तारीख़</th>';
+  for (var w=0; w<db.workers.length; w++){
+    var wk = db.workers[w];
+    html += '<th>' + esc(wk.name) + '<span class="wage">' + esc(wk.role) + ' · ' + rs(wk.wage) + '/दिन</span></th>';
+  }
+  html += '</tr></thead><tbody>';
+  for (var d=1; d<=days; d++){
+    var key = dkey(viewY, viewM, d);
+    var dow = DOW[new Date(viewY, viewM, d).getDay()];
+    html += '<tr' + (key===todayKey ? ' class="today" id="todayRow"' : '') + '>';
+    html += '<td class="date">' + d + '<span class="dow">' + dow + '</span></td>';
+    for (var w2=0; w2<db.workers.length; w2++){
+      var wk2 = db.workers[w2];
+      var mk = (db.marks[key] || {})[wk2.id];
+      var paid = paidOn(wk2.id, key);
+      html += '<td class="cell" data-date="' + key + '" data-wid="' + wk2.id + '">';
+      if (mk){ var mo = markOf(mk); html += '<span class="mark ' + mk + '">' + mo.t + '</span>'; }
+      else { html += '<span class="empty">·</span>'; }
+      if (paid>0) html += '<span class="paid">दिया ' + rs(paid) + '</span>';
+      html += '</td>';
+    }
+    html += '</tr>';
+  }
+  html += '</tbody>';
+  document.getElementById('grid').innerHTML = html;
+
+  var cells = document.querySelectorAll('td.cell');
+  for (var c=0; c<cells.length; c++){
+    cells[c].addEventListener('click', function(){
+      openEditor(this.getAttribute('data-date'), parseInt(this.getAttribute('data-wid'),10));
+    });
+  }
+  renderSummary();
+  renderWorkerList();
+}
+
+function renderSummary(){
+  var box = document.getElementById('summary');
+  var html = '';
+  for (var i=0; i<db.workers.length; i++){
+    var wk = db.workers[i];
+    var cnt = {P:0,H:0,h:0,A:0}, hazri = 0, kamai = 0;
+    var days = new Date(viewY, viewM+1, 0).getDate();
+    for (var d=1; d<=days; d++){
+      var mk = (db.marks[dkey(viewY, viewM, d)] || {})[wk.id];
+      if (mk && cnt.hasOwnProperty(mk)){
+        cnt[mk]++; hazri += markOf(mk).v; kamai += rateFor(wk.wage, mk);
+      }
+    }
+    var diya = paidInMonth(wk.id, viewY, viewM);
+    html += '<div class="card"><h3>' + esc(wk.name) + ' <span style="color:var(--dim);font-size:13px">(' + esc(wk.role) + ')</span></h3>'
+      + '<p class="row">P: <b>' + cnt.P + '</b> · P½: <b>' + cnt.H + '</b> · ½: <b>' + cnt.h + '</b> · A: <b>' + cnt.A + '</b>'
+      + ' · कुल <b>' + hazri + ' हाज़िरी</b></p>'
+      + '<p class="row">कमाई: <b>' + rs(kamai) + '</b> · दिया: <b>' + rs(diya) + '</b>'
+      + ' · <span class="baki">बाकी: ' + rs(kamai - diya) + '</span></p>'
+      + '<p class="note">P½ = 1.5 हाज़िरी (' + rs(wk.wage) + ' + ' + rs(halfOf(wk.wage)) + ' = ' + rs(wk.wage + halfOf(wk.wage)) + ') · ½ = ' + rs(halfOf(wk.wage)) + '</p>'
+      + '</div>';
+  }
+  box.innerHTML = html;
+}
+
+function renderWorkerList(){
+  var box = document.getElementById('workerList');
+  if (!box) return;
+  var html = '';
+  for (var i=0; i<db.workers.length; i++){
+    var wk = db.workers[i];
+    html += '<div class="payitem"><span>' + esc(wk.name) + ' — ' + esc(wk.role) + ' · ' + rs(wk.wage) + '/दिन</span>'
+      + '<button type="button" data-del="' + wk.id + '">हटाओ</button></div>';
+  }
+  box.innerHTML = html;
+  var btns = box.querySelectorAll('[data-del]');
+  for (var b=0; b<btns.length; b++){
+    btns[b].addEventListener('click', function(){
+      var id = parseInt(this.getAttribute('data-del'),10);
+      if (this.getAttribute('data-arm')){
+        db.workers = db.workers.filter(function(x){ return x.id!==id; });
+        save(); render();
+        showOk('कामगार हटा दिया गया');
+      } else {
+        this.setAttribute('data-arm','1');
+        this.textContent = 'पक्का हटाओ?';
+      }
+    });
+  }
+}
+
+/* ---------- दिन का editor ---------- */
+function workerById(id){
+  for (var i=0;i<db.workers.length;i++) if (db.workers[i].id===id) return db.workers[i];
+  return null;
+}
+function openEditor(dateStr, wid){
+  sel = {date:dateStr, workerId:wid};
+  var wk = workerById(wid);
+  var parts = dateStr.split('-');
+  document.getElementById('edTitle').textContent = wk.name + ' — ' + parseInt(parts[2],10) + ' ' + MONTHS[parseInt(parts[1],10)-1];
+  document.getElementById('edSub').textContent = wk.role + ' · एक हाज़िरी ' + rs(wk.wage);
+  drawEditor();
+  document.getElementById('bg').style.display = 'block';
+  document.getElementById('editor').style.display = 'block';
+}
+function drawEditor(){
+  var wk = workerById(sel.workerId);
+  var cur = (db.marks[sel.date] || {})[sel.workerId] || '';
+  var html = '';
+  for (var i=0;i<MARKS.length;i++){
+    var m = MARKS[i];
+    html += '<button type="button" data-mk="' + m.k + '" class="' + (cur===m.k ? 'on-'+m.k : '') + '">'
+      + m.t + '<small>' + m.s + '<br>' + rs(rateFor(wk.wage, m.k)) + '</small></button>';
+  }
+  html += '<button type="button" data-mk="">✕<small>निशान<br>हटाओ</small></button>';
+  var box = document.getElementById('edMarks');
+  box.innerHTML = html;
+  var btns = box.querySelectorAll('[data-mk]');
+  for (var b=0; b<btns.length; b++){
+    btns[b].addEventListener('click', function(){
+      var k = this.getAttribute('data-mk');
+      if (!db.marks[sel.date]) db.marks[sel.date] = {};
+      if (k) db.marks[sel.date][sel.workerId] = k;
+      else delete db.marks[sel.date][sel.workerId];
+      save(); drawEditor(); render();
+    });
+  }
+  var ps = monthPayments(sel.workerId, sel.date);
+  var ph = '';
+  for (var p=0; p<ps.length; p++){
+    ph += '<div class="payitem"><span>दिया — ' + rs(ps[p].amount) + '</span>'
+      + '<button type="button" data-pay="' + ps[p].id + '">✕</button></div>';
+  }
+  document.getElementById('payList').innerHTML = ph;
+  var pb = document.querySelectorAll('[data-pay]');
+  for (var q=0; q<pb.length; q++){
+    pb[q].addEventListener('click', function(){
+      var id = parseInt(this.getAttribute('data-pay'),10);
+      db.payments = db.payments.filter(function(x){ return x.id!==id; });
+      save(); drawEditor(); render();
+    });
+  }
+}
+function closeEditor(){
+  document.getElementById('bg').style.display = 'none';
+  document.getElementById('editor').style.display = 'none';
+  sel = null;
+}
+document.getElementById('bg').addEventListener('click', closeEditor);
+document.getElementById('btnCloseEd').addEventListener('click', closeEditor);
+document.getElementById('btnPay').addEventListener('click', function(){
+  var inp = document.getElementById('payAmt');
+  var amt = parseInt(inp.value, 10);
+  if (!amt || amt <= 0){ inp.focus(); return; }
+  db.payments.push({id: Date.now(), workerId: sel.workerId, date: sel.date, amount: amt});
+  inp.value = '';
+  save(); drawEditor(); render();
+});
+
+/* ---------- महीना बदलना ---------- */
+document.getElementById('prevM').addEventListener('click', function(){
+  viewM--; if (viewM < 0){ viewM = 11; viewY--; } render();
+});
+document.getElementById('nextM').addEventListener('click', function(){
+  viewM++; if (viewM > 11){ viewM = 0; viewY++; } render();
+});
+
+/* ---------- कामगार जोड़ना ---------- */
+function showOk(msg){
+  var el = document.getElementById('okMsg');
+  el.textContent = '✓ ' + msg;
+  el.style.display = 'block';
+  setTimeout(function(){ el.style.display = 'none'; }, 3500);
+}
+function showErr(msg){
+  var el = document.getElementById('errMsg');
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(function(){ el.style.display = 'none'; }, 3500);
+}
+document.getElementById('toggleAdd').addEventListener('click', function(){
+  var card = document.getElementById('addCard');
+  var open = card.style.display !== 'none';
+  card.style.display = open ? 'none' : 'block';
+  if (!open) card.scrollIntoView({behavior:'smooth', block:'center'});
+});
+document.getElementById('fWage').addEventListener('input', function(){
+  var w = parseInt(this.value, 10);
+  document.getElementById('wageHint').textContent = w > 0
+    ? 'P½ (1.5 हाज़िरी) = ' + rs(w) + ' + ' + rs(halfOf(w)) + ' = ' + rs(w + halfOf(w)) + ' · ½ हाज़िरी = ' + rs(halfOf(w))
+    : '';
+});
+document.getElementById('btnAdd').addEventListener('click', function(){
+  var name = document.getElementById('fName').value.trim();
+  var role = document.getElementById('fRole').value;
+  var wage = parseInt(document.getElementById('fWage').value, 10);
+  if (!name){ showErr('पहले कामगार का नाम लिखो'); return; }
+  if (!wage || wage <= 0){ showErr('एक हाज़िरी के पैसे लिखो (₹ में)'); return; }
+  var nid = 1;
+  for (var i=0;i<db.workers.length;i++) nid = Math.max(nid, db.workers[i].id + 1);
+  db.workers.push({id:nid, name:name, role:role, wage:wage});
+  save();
+  document.getElementById('fName').value = '';
+  document.getElementById('fWage').value = '';
+  document.getElementById('wageHint').textContent = '';
+  document.getElementById('addCard').style.display = 'none';
+  render();
+  window.scrollTo({top:0, behavior:'smooth'});
+  showOk(name + ' जुड़ गया — रजिस्टर में कॉलम बन गया');
+});
+
+render();
+var tr = document.getElementById('todayRow');
+if (tr) tr.scrollIntoView({block:'center'});
+</script>
+</body>
+</html>
