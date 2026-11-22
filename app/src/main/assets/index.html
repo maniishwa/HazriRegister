@@ -27,6 +27,7 @@
     background-image:linear-gradient(90deg,transparent 0,transparent 34px,var(--margin) 35px,transparent 36px)}
   table{border-collapse:collapse;width:100%;min-width:340px}
   th,td{border-bottom:1px solid var(--line);padding:0;text-align:center}
+  th.wdiv,td.wdiv{border-left:2px solid #94a3b8}
   thead th{background:#fdf6d8;font-size:14px;padding:8px 4px;border-bottom:2px solid var(--margin)}
   thead th .wage{display:block;font-size:11px;color:var(--dim);font-weight:600}
   td.date{font-weight:700;font-size:14px;padding:8px 2px;width:64px;color:#374151}
@@ -216,7 +217,7 @@ function render(){
   var html = '<thead><tr><th style="width:64px">तारीख़</th>';
   for (var w=0; w<db.workers.length; w++){
     var wk = db.workers[w];
-    html += '<th>' + esc(wk.name) + '<span class="wage">' + esc(wk.role) + ' · ' + rs(wk.wage) + '/दिन</span></th>';
+    html += '<th' + (w>0 ? ' class="wdiv"' : '') + '>' + esc(wk.name) + '<span class="wage">' + esc(wk.role) + ' · ' + rs(wk.wage) + '/दिन</span></th>';
   }
   html += '</tr></thead><tbody>';
   for (var d=1; d<=days; d++){
@@ -228,7 +229,7 @@ function render(){
       var wk2 = db.workers[w2];
       var mk = (db.marks[key] || {})[wk2.id];
       var paid = paidOn(wk2.id, key);
-      html += '<td class="cell" data-date="' + key + '" data-wid="' + wk2.id + '">';
+      html += '<td class="cell' + (w2>0 ? ' wdiv' : '') + '" data-date="' + key + '" data-wid="' + wk2.id + '">';
       if (mk){ var mo = markOf(mk); html += '<span class="mark ' + mk + '">' + mo.t + '</span>'; }
       else { html += '<span class="empty">·</span>'; }
       if (paid>0) html += '<span class="paid">दिया ' + rs(paid) + '</span>';
